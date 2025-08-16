@@ -1,32 +1,71 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
+'use client';
+
+import { useEffect, useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { addClothingItem } from "./actions";
-import { ClothingCategory } from "@/generated/prisma";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from 'next/image';
 
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+// Define the type for a clothing item based on your schema
+interface ClothingItem {
+  id: number;
+  name: string;
+  category: string;
+  color: string;
+  brand?: string | null;
+  imageUrl?: string | null;
+}
 
-  if (!session || !session.user?.email) {
-    redirect('/login');
-  }
+const ClothingCategory = ['SHIRT', 'PANTS', 'SHOES', 'JACKET', 'ACCESSORY', 'OTHER'];
 
-  const clothingItems = await prisma.clothingItem.findMany({
-    where: {
-      owner: {
-        email: session.user.email,
-      },
-    },
-    orderBy: {
-      id: 'desc'
+export default function DashboardPage() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    } else {
+      fetchClothingItems();
     }
-  });
+  }, [isAuthenticated, router]);
+
+  const fetchClothingItems = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/clothing');
+      setClothingItems(response.data);
+    } catch (error) {
+      console.error("Failed to fetch clothing items", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddItem = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      await api.post('/clothing', data);
+      fetchClothingItems(); // Refetch items after adding a new one
+      (event.target as HTMLFormElement).reset(); // Reset form
+    } catch (error) {
+      console.error("Failed to add item", error);
+      alert("Failed to add item. Please try again.");
+    }
+  };
+
+  if (isLoading) {
+    return <div className="container mx-auto py-8">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -39,14 +78,14 @@ export default async function DashboardPage() {
               <CardTitle>Add New Clothing</CardTitle>
             </CardHeader>
             <CardContent>
-              <form action={addClothingItem} className="flex flex-col gap-4">
+              <form onSubmit={handleAddItem} className="flex flex-col gap-4">
                 <Input name="name" placeholder="Item Name (e.g., Blue T-Shirt)" required />
                 <Select name="category" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.values(ClothingCategory).map((category) => (
+                    {ClothingCategory.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category.charAt(0) + category.slice(1).toLowerCase()}
                       </SelectItem>

@@ -4,12 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { FormEvent } from "react";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { login } = useAuth();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,19 +16,7 @@ export default function LoginPage() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
-
-    if (result?.ok) {
-      router.push('/dashboard');
-    } else {
-      // Handle error, e.g., show a notification
-      console.error('Failed to login:', result?.error);
-      alert('Invalid email or password');
-    }
+    await login({ email, password });
   }
 
   return (

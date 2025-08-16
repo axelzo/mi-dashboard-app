@@ -1,11 +1,11 @@
 'use client';
 
-import { useSession, signOut } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { Button } from "./ui/button";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <nav className="bg-gray-800 text-white p-4">
@@ -14,7 +14,7 @@ export default function Navbar() {
           MyDashboardApp
         </Link>
         <div className="flex items-center gap-4">
-          {!session ? (
+          {!isAuthenticated ? (
             <>
               <Link href="/login">
                 <Button variant="ghost">Login</Button>
@@ -28,8 +28,7 @@ export default function Navbar() {
               <Link href="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
               </Link>
-              <p>Welcome, {session.user?.name}</p>
-              <Button onClick={() => signOut({ callbackUrl: '/' })}>Logout</Button>
+              <Button onClick={logout}>Logout</Button>
             </>
           )}
         </div>
