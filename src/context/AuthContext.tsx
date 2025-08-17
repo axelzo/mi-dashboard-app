@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+// Import the specific API functions
+import { login as apiLogin, register as apiRegister } from '@/lib/api';
 
 // Define the shape of the context data
 interface AuthContextType {
@@ -30,16 +31,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       setIsAuthenticated(true);
-    } else {
+    }
+    else {
       setIsAuthenticated(false);
     }
   }, []);
 
   const login = async (data: any) => {
     try {
-      const response = await api.post('/auth/login', data);
-      if (response.data.token) {
-        localStorage.setItem('jwt_token', response.data.token);
+      // Use the imported apiLogin function
+      const responseData = await apiLogin(data);
+      if (responseData.token) {
+        localStorage.setItem('jwt_token', responseData.token);
         setIsAuthenticated(true);
         router.push('/dashboard');
       }
@@ -51,7 +54,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const register = async (data: any) => {
     try {
-      await api.post('/auth/register', data);
+      // Use the imported apiRegister function
+      await apiRegister(data);
       router.push('/login');
     } catch (error) {
       console.error('Registration failed', error);
