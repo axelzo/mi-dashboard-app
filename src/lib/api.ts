@@ -12,7 +12,14 @@ api.interceptors.request.use(
       const token = localStorage.getItem('jwt_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log('[API] Token agregado a la petición:', token);
       }
+      else {
+        console.log('[API] No se encontró token en localStorage');
+      }
+    }
+    else {
+      console.log('[API] No estamos en el navegador, no se puede acceder a localStorage');
     }
     return config;
   },
@@ -26,20 +33,24 @@ export default api;
 
 // Auth API
 export const login = async (credentials: any) => {
+  console.log('[API] Intentando login con credenciales:', credentials);
   const response = await api.post('/auth/login', credentials, {
     headers: {
       'Content-Type': 'application/json',
     },
   });
+  console.log('[API] Respuesta de login:', response.data);
   return response.data;
 };
 
 export const register = async (data: any) => {
+  console.log('[API] Intentando registro con datos:', data);
   const response = await api.post('/auth/register', data, {
     headers: {
       'Content-Type': 'application/json',
     },
   });
+  console.log('[API] Respuesta de registro:', response.data);
   return response.data;
 };
 

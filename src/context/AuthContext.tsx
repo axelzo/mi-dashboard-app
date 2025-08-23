@@ -8,8 +8,8 @@ import { login as apiLogin, register as apiRegister } from '@/lib/api';
 // Define the shape of the context data
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (data: any) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  login: (data: unknown) => Promise<void>;
+  register: (data: unknown) => Promise<void>;
   logout: () => void;
 }
 
@@ -31,41 +31,52 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       setIsAuthenticated(true);
+    console.log('[AuthContext] Token encontrado al iniciar:', token);
     }
     else {
       setIsAuthenticated(false);
+    console.log('[AuthContext] No se encontró token al iniciar');
     }
   }, []);
 
-  const login = async (data: any) => {
+  const login = async (data: unknown) => {
     try {
+        console.log('[AuthContext] Intentando login con datos:', data);
       // Use the imported apiLogin function
       const responseData = await apiLogin(data);
+        console.log('[AuthContext] Respuesta de login:', responseData);
       if (responseData.token) {
         localStorage.setItem('jwt_token', responseData.token);
+          console.log('[AuthContext] Token guardado en localStorage:', responseData.token);
         setIsAuthenticated(true);
+          console.log('[AuthContext] Usuario autenticado, redirigiendo a /dashboard');
         router.push('/dashboard');
       }
     } catch (error) {
-      console.error('Login failed', error);
+        console.error('[AuthContext] Login fallido', error);
       alert('Login failed. Please check your credentials.');
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: unknown) => {
     try {
+    console.log('[AuthContext] Intentando registro con datos:', data);
       // Use the imported apiRegister function
       await apiRegister(data);
+    console.log('[AuthContext] Registro exitoso, redirigiendo a /login');
       router.push('/login');
     } catch (error) {
-      console.error('Registration failed', error);
+    console.error('[AuthContext] Registro fallido', error);
       alert('Registration failed. Please try again.');
     }
   };
 
   const logout = () => {
+    console.log('[AuthContext] Logout iniciado');
     localStorage.removeItem('jwt_token');
+    console.log('[AuthContext] Token eliminado de localStorage');
     setIsAuthenticated(false);
+    console.log('[AuthContext] Usuario desautenticado, redirigiendo a /login');
     router.push('/login');
   };
 
